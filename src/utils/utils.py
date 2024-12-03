@@ -67,3 +67,10 @@ def current_datetime_getter():
     current_time = datetime.now()
     current_datetime = current_time.strftime("%Y%m%d_%H%M%S")
     return current_datetime
+
+
+def get_workdir():
+    """
+    실행시스템경로/Viral 경로 리턴
+    """
+    return os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
