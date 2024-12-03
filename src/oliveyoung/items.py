@@ -1,8 +1,5 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-# from selenium.webdriver.support.ui import WebDriverWait
-# from selenium.webdriver.support import expected_conditions as EC
-# from datetime import datetime, timedelta
 from collections import defaultdict
 import time
 import random
@@ -11,6 +8,9 @@ from src.oliveyoung.models import oliveyoung_item_generator
 
 
 class Items:
+    """
+    brand_name으로 들어온 브랜드의 올리브영 웹 페이지 상 아이템, 리뷰 수집
+    """
     def __init__(self, brand_name: str, brand_url: str):
         self.brand = brand_name
         self.brand_url = brand_url

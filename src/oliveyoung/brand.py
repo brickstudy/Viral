@@ -1,7 +1,7 @@
 from collections import defaultdict
 from datetime import datetime
 
-from src.utils import get_soup
+from src.utils.utils import get_soup
 from src.oliveyoung.models import brand_generator
 
 
