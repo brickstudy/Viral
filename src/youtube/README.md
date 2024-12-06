@@ -1,0 +1,24 @@
+## Youtube 크롤링
+
+```bash
+python main.py --config [config.json 경로] --period [week or month] --step [1, 2, 3, 4] --data_path [data 폴더 경로] --date_op [yyyy-mm-dd]
+```
+
+- `--config` : brand keyword 와 user-agent 가 있는 config.json 파일 경로
+- `--period` : 1주일, 1달 선택. `--date_op` 를 사용할 경우 입력하지 않아도 됩니다.
+- `--step`
+  - `1` : 검색 크롤링만
+  - `2` : 영상 설명 크롤링만
+  - `3` : youtube.csv 최신화만
+  - `4`(default) : 전체 작업 실시
+- `--data_path` : data 저장 경로 입니다. `main.py` 실행 시 하위 폴더로 `pre`, `post`, `backup` 폴더가 자동으로 생성됩니다.
+- `--date_op` : youtube 고급검색 옵션입니다. `2024-12-01` 과 같이 정확한 형태로 넣어주셔야 합니다.
+
+```text
+├── README.md
+├── __init__.py
+├── config.json  # brand keyword(933), user-agent
+├── main.py
+├── utils.py
+└── youtube_crawler.py
+```
