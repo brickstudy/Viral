@@ -11,7 +11,7 @@ def main():
         "--config",
         type=str,
         required=False,
-        default="/Users/baekkwanghyun/Desktop/Projects/5.Viral/config.json",
+        default="/Users/config.json",
     )
     parser.add_argument(
         "--period",
@@ -29,24 +29,26 @@ def main():
         "--data_path",
         type=str,
         required=False,
-        default="/Users/baekkwanghyun/Desktop/Projects/5.Viral/data/",
+        default="/Users/data/",
     )
     parser.add_argument(
         "--date_op",
         type=str,
         required=False,
         default=False,
-    )
+    )  # ex. "2024-11-01" <- 이와 같은 형태여야 합니다.
 
     args = parser.parse_args()
     crawler = Youtube_Crawler(args)
 
-    pre = os.path.join(args.data_path, "pre")  # 검색 크롤링 결과 폴더
-    post = os.path.join(args.data_path, "post")  # 설명 크롤링 결과 폴더
-    backup = os.path.join(args.data_path, "backup")  # 백업 폴더
-    for folder in [pre, post, backup]:
+    pre = os.path.join(args.data_path, "pre")
+    post = os.path.join(args.data_path, "post")
+    backup = os.path.join(args.data_path, "backup")
+    # 폴더 없으면 생성
+    for folder in [args.data_path, pre, post, backup]:
         if not os.path.exists(folder):
             os.mkdir(folder)
+            print("data 폴더를 생성합니다.")
 
     if args.step == 1:
         crawler.search_crawling()

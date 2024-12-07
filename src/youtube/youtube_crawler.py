@@ -50,7 +50,7 @@ class Youtube_Crawler:
         c1 = datetime.now()
         print(f"{c1} 검색 크롤링 시작", end="\n")
 
-        # 12/06 500 개만 먼저 크롤링
+        # 크롤링 개수 제한. 아래 예시 500 개.
         keywords = keywords[:500]
 
         for keyword in tqdm(keywords, total=len(keywords), desc="크롤링 진행 중"):
@@ -213,7 +213,7 @@ class Youtube_Crawler:
 
     def description_crawling(self):
         """
-        영상 설명란 정보, 비디오 길이, 조회 수, 영상 업로드 날짜 얻어오기. 정보를 얻어오면 그 즉시 저장하고 업데이트
+        영상 설명란 정보, 채널 id, 비디오 길이, 조회 수, 영상 업로드 날짜 얻어오기. 정보를 얻어오면 그 즉시 저장하고 업데이트
         """
 
         folder_path = os.path.join(self.data_path, "pre")
@@ -250,7 +250,13 @@ class Youtube_Crawler:
         else:
             processed_df = pd.DataFrame(
                 columns=df.columns.tolist()
-                + ["video_description", "video_length", "view_count", "upload_date"]
+                + [
+                    "channel_owner_id",
+                    "video_description",
+                    "video_length",
+                    "view_count",
+                    "upload_date",
+                ]
             )
             processed_links = set()
 
@@ -276,16 +282,25 @@ class Youtube_Crawler:
                 soup = BeautifulSoup(html, "html.parser")
 
                 script = soup.select_one("body > script").get_text()
+                channel_owner_id_re = (
+                    r'"ownerProfileUrl":"http://www.youtube.com/@(.*?)"'
+                )
                 description_re = r'description":{"simpleText":"(.*?)"},'
                 length_re = r'},"lengthSeconds":"(.*?)","ownerProfileUrl"'
                 view_re = r'"viewCount":"(.*?)",'
                 upload_date_re = r'"publishDate":"(.*?)","ownerChannelName'
 
+                channel_owner_id = re.search(
+                    channel_owner_id_re, script
+                )  # 채널 제작자 id
                 description = re.search(description_re, script)  # 영상 세부 설명
                 length = re.search(length_re, script)  # 영상 길이
                 view = re.search(view_re, script)  # 조회수
                 upload_date = re.search(upload_date_re, script)  # 업로드 날짜
 
+                channel_owner_id = (
+                    channel_owner_id.group(1) if channel_owner_id else "-"
+                )
                 description = description.group(1) if description else "-"
                 length = length.group(1) if length else "-"
                 view = view.group(1) if view else "-"
@@ -293,7 +308,13 @@ class Youtube_Crawler:
 
             except Exception as e:
                 print(f"URL {URL} 에서 에러 발생: {e}")
-                description, length, view, upload_date = "-", "-", "-", "-"
+                channel_owner_id, description, length, view, upload_date = (
+                    "-",
+                    "-",
+                    "-",
+                    "-",
+                    "-",
+                )
 
             # 새 데이터를 처리된 데이터프레임에 추가
             new_row = pd.DataFrame(
@@ -305,6 +326,7 @@ class Youtube_Crawler:
                         row["link"],
                         row["is_shorts"],
                         row["thumbnail"],
+                        channel_owner_id,
                         description,
                         length,
                         view,
@@ -348,6 +370,7 @@ class Youtube_Crawler:
                     "link",
                     "is_shorts",
                     "thumbnail",
+                    "channel_owner_id",
                     "video_description",
                     "video_length",
                     "view_count",
@@ -384,7 +407,7 @@ class Youtube_Crawler:
         # 중복 제거
         new_df["source"] = ["post_df"] * len(post_df) + ["df"] * len(df)
         new_df.drop_duplicates(
-            subset=["keywords", "title", "channel_owner", "link"],
+            subset=["keywords", "title", "channel_owner", "link", "channel_owner_id"],
             keep="first",
             inplace=True,
             ignore_index=True,
