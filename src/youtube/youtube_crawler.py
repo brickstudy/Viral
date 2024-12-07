@@ -213,7 +213,7 @@ class Youtube_Crawler:
 
     def description_crawling(self):
         """
-        영상 설명란 정보, 섬네일 이미지 얻어오기
+        영상 설명란 정보, 섬네일 이미지 얻어오기. 정보를 얻어오면 그 즉시 저장하고 업데이트
         """
 
         folder_path = os.path.join(self.data_path, "pre")
@@ -238,15 +238,35 @@ class Youtube_Crawler:
                 "thumbnail",
             ],
         )
+
+        # 결과 저장 파일
+        results = os.path.join(self.data_path, f"post/{os.path.basename(latest_file)}")
+
+        # 이미 처리된 데이터 불러오기
+        if os.path.exists(results):
+            processed_df = pd.read_csv(results, encoding="utf-8", lineterminator="\n")
+            processed_links = set(processed_df["link"].tolist())
+            print(f"이미 처리된 URL 개수: {len(processed_links)}")
+        else:
+            processed_df = pd.DataFrame(
+                columns=df.columns.tolist()
+                + ["video_description", "video_length", "view_count", "upload_date"]
+            )
+            processed_links = set()
+
         _, user_agent = load_config(self.config)
         driver = start_driver(user_agent)
 
         c1 = datetime.now()
         print(f"{c1} 영상 설명 크롤링 시작!", end="\n")
 
-        video_infos = []
         for i in tqdm(range(len(df)), total=len(df), desc="크롤링 진행 중"):
-            URL = df.iloc[i, :]["link"]
+            row = df.iloc[i, :]
+            URL = row["link"]
+
+            # 이미 처리된 URL 은 건너뛰기
+            if URL in processed_links:
+                continue
 
             try:
                 driver.get(URL)
@@ -271,29 +291,36 @@ class Youtube_Crawler:
                 view = view.group(1) if view else "-"
                 upload_date = upload_date.group(1) if upload_date else "-"
 
-                video_infos.append([description, length, view, upload_date])
-
             except Exception as e:
                 print(f"URL {URL} 에서 에러 발생: {e}")
-                video_infos.append(["-", "-", "-", "-"])
+                description, length, view, upload_date = "-", "-", "-", "-"
+
+            # 새 데이터를 처리된 데이터프레임에 추가
+            new_row = pd.DataFrame(
+                [
+                    [
+                        row["keywords"],
+                        row["title"],
+                        row["channel_owner"],
+                        row["link"],
+                        row["is_shorts"],
+                        row["thumbnail"],
+                        description,
+                        length,
+                        view,
+                        upload_date,
+                    ]
+                ],
+                columns=processed_df.columns,
+            )
+
+            processed_df = pd.concat([processed_df, new_row], ignore_index=True)
+            processed_df.to_csv(results, index=False, encoding="utf-8")
+            processed_links.add(URL)
 
             time.sleep(random.uniform(1, 3))
 
         driver.quit()
-
-        video_infos = pd.DataFrame(
-            video_infos,
-            columns=[
-                "video_description",
-                "video_length",
-                "view_count",
-                "upload_date",
-            ],
-        )
-
-        new_df = pd.concat([df, video_infos], axis=1)
-        results = os.path.join(self.data_path, f"post/{os.path.basename(latest_file)}")
-        new_df.to_csv(results, index=False, encoding="utf-8")
 
         c2 = datetime.now()
         print(f"{c2} 영상 설명 크롤링 끝!", end="\n")
