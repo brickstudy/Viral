@@ -1,6 +1,5 @@
 from selenium.webdriver.common.by import By
 from bs4 import BeautifulSoup
-import requests
 
 from utils import load_config, scroll, start_driver
 
@@ -51,6 +50,9 @@ class Youtube_Crawler:
         c1 = datetime.now()
         print(f"{c1} 검색 크롤링 시작", end="\n")
 
+        # 12/06 500 개만 먼저 크롤링
+        keywords = keywords[:500]
+
         for keyword in tqdm(keywords, total=len(keywords), desc="크롤링 진행 중"):
             SEARCH_KEYWORD = keyword.replace(" ", "+")
 
@@ -67,13 +69,13 @@ class Youtube_Crawler:
                 print("URL : " + URL)
                 driver.get(URL)
                 scroll(driver)
-                time.sleep(3)
+                time.sleep(1.5)
 
             else:
                 URL = "https://www.youtube.com/results?search_query=" + SEARCH_KEYWORD
                 print("URL : " + URL)
                 driver.get(URL)
-                time.sleep(3)
+                time.sleep(1.5)
 
                 # 동영상 - 필터(이번주) - 필터(업로드 날짜)
                 driver.find_element(
@@ -248,39 +250,34 @@ class Youtube_Crawler:
 
             try:
                 driver.get(URL)
+                time.sleep(2)
 
-                res = requests.get(URL)
-                if res.status_code == 200:
-                    html = driver.page_source
-                    soup = BeautifulSoup(html, "html.parser")
+                html = driver.page_source
+                soup = BeautifulSoup(html, "html.parser")
 
-                    script = soup.select_one("body > script").get_text()
-                    description_re = r'description":{"simpleText":"(.*?)"},'
-                    length_re = r'},"lengthSeconds":"(.*?)","ownerProfileUrl"'
-                    view_re = r'"viewCount":"(.*?)",'
-                    upload_date_re = r'"publishDate":"(.*?)","ownerChannelName'
+                script = soup.select_one("body > script").get_text()
+                description_re = r'description":{"simpleText":"(.*?)"},'
+                length_re = r'},"lengthSeconds":"(.*?)","ownerProfileUrl"'
+                view_re = r'"viewCount":"(.*?)",'
+                upload_date_re = r'"publishDate":"(.*?)","ownerChannelName'
 
-                    description = re.search(description_re, script)  # 영상 세부 설명
-                    length = re.search(length_re, script)  # 영상 길이
-                    view = re.search(view_re, script)  # 조회수
-                    upload_date = re.search(upload_date_re, script)  # 업로드 날짜
+                description = re.search(description_re, script)  # 영상 세부 설명
+                length = re.search(length_re, script)  # 영상 길이
+                view = re.search(view_re, script)  # 조회수
+                upload_date = re.search(upload_date_re, script)  # 업로드 날짜
 
-                    description = description.group(1) if description else "-"
-                    length = length.group(1) if length else "-"
-                    view = view.group(1) if view else "-"
-                    upload_date = upload_date.group(1) if upload_date else "-"
+                description = description.group(1) if description else "-"
+                length = length.group(1) if length else "-"
+                view = view.group(1) if view else "-"
+                upload_date = upload_date.group(1) if upload_date else "-"
 
-                    video_infos.append([description, length, view, upload_date])
-
-                else:
-                    video_infos.append(["-", "-", "-", "-"])
+                video_infos.append([description, length, view, upload_date])
 
             except Exception as e:
                 print(f"URL {URL} 에서 에러 발생: {e}")
-
                 video_infos.append(["-", "-", "-", "-"])
 
-            time.sleep(random.uniform(1, 5))
+            time.sleep(random.uniform(1, 3))
 
         driver.quit()
 
