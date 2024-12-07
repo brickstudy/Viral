@@ -106,6 +106,7 @@ def start_driver(user_agent, timeout=15):
             options = webdriver.ChromeOptions()
             options.add_argument("user-agent=" + user_agent)
             options.add_argument("headless")
+            options.add_argument("--mute-audio")
             driver = webdriver.Chrome(service=service, options=options)
 
         except WebDriverException as e:
