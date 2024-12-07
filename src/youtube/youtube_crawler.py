@@ -24,7 +24,7 @@ class Youtube_Crawler:
 
     def search_crawling(self):
         """
-        검색 및 필터링 후 키워드, 영상제목, 영상 제작자, 링크, 쇼츠여부 수집
+        검색 및 필터링 후 키워드, 영상제목, 영상 제작자, 링크, 쇼츠여부, 섬네일 이미지 수집
         """
         keywords, user_agent = load_config(self.config)
         driver = start_driver(user_agent)
@@ -213,7 +213,7 @@ class Youtube_Crawler:
 
     def description_crawling(self):
         """
-        영상 설명란 정보, 섬네일 이미지 얻어오기. 정보를 얻어오면 그 즉시 저장하고 업데이트
+        영상 설명란 정보, 비디오 길이, 조회 수, 영상 업로드 날짜 얻어오기. 정보를 얻어오면 그 즉시 저장하고 업데이트
         """
 
         folder_path = os.path.join(self.data_path, "pre")
