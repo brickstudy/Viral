@@ -51,7 +51,8 @@ class Youtube_Crawler:
         print(f"{c1} 검색 크롤링 시작", end="\n")
 
         # 크롤링 개수 제한. 아래 예시 500 개.
-        keywords = keywords[:500]
+        # keywords = keywords[:500]
+        keywords = keywords[311:622]
 
         for keyword in tqdm(keywords, total=len(keywords), desc="크롤링 진행 중"):
             SEARCH_KEYWORD = keyword.replace(" ", "+")
@@ -244,7 +245,7 @@ class Youtube_Crawler:
 
         # 이미 처리된 데이터 불러오기
         if os.path.exists(results):
-            processed_df = pd.read_csv(results, encoding="utf-8", lineterminator="\n")
+            processed_df = pd.read_csv(results, encoding="utf-8")
             processed_links = set(processed_df["link"].tolist())
             print(f"이미 처리된 URL 개수: {len(processed_links)}")
         else:
