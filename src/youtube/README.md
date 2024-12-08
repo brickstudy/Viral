@@ -1,7 +1,7 @@
 ## Youtube 크롤링
 
 ```bash
-python main.py --config [config.json 경로] --period [week or month] --step [1, 2, 3, 4] --data_path [data 폴더 경로] --date_op [yyyy-mm-dd]
+python main.py --config [config.json 경로] --period [week or month] --step [1, 2, 3, 4] --data_path [data 폴더 경로] --date_op [yyyy-mm-dd] --save_batch [number]
 ```
 
 - `--config` : brand keyword 와 user-agent 가 있는 config.json 파일 경로
@@ -13,6 +13,7 @@ python main.py --config [config.json 경로] --period [week or month] --step [1,
   - `4`(default) : 전체 작업 실시
 - `--data_path` : data 저장 경로 입니다. `main.py` 실행 시 하위 폴더로 `pre`, `post`, `backup` 폴더가 자동으로 생성됩니다.
 - `--date_op` : youtube 고급검색 옵션입니다. `2024-12-01` 과 같이 정확한 형태로 넣어주셔야 합니다.
+- `--save_batch` : 데이터 저장 주기 옵션입니다. default 는 1 로 하나 수집할 때마다 csv 파일을 최신화 합니다.
 
 ```text
 ├── README.md

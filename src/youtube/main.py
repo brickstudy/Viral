@@ -37,6 +37,12 @@ def main():
         required=False,
         default=False,
     )  # ex. "2024-11-01" <- 이와 같은 형태여야 합니다.
+    parser.add_argument(
+        "--save_batch",
+        type=int,
+        required=False,
+        default=1,
+    )
 
     args = parser.parse_args()
     crawler = Youtube_Crawler(args)

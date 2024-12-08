@@ -21,6 +21,7 @@ class Youtube_Crawler:
         self.step = args.step  # 1, 2, 3, 4
         self.data_path = args.data_path  # data 폴더 경로
         self.date_op = args.date_op  # date operation 사용 여부
+        self.save_batch = args.save_batch  # 데이터 저장 주기
 
     def search_crawling(self):
         """
@@ -50,9 +51,8 @@ class Youtube_Crawler:
         c1 = datetime.now()
         print(f"{c1} 검색 크롤링 시작", end="\n")
 
-        # 크롤링 개수 제한. 아래 예시 500 개.
-        # keywords = keywords[:500]
-        keywords = keywords[311:622]
+        # 크롤링 개수 제한. 아래는 500개 예시
+        keywords = keywords[:500]
 
         for keyword in tqdm(keywords, total=len(keywords), desc="크롤링 진행 중"):
             SEARCH_KEYWORD = keyword.replace(" ", "+")
@@ -246,8 +246,12 @@ class Youtube_Crawler:
         # 이미 처리된 데이터 불러오기
         if os.path.exists(results):
             processed_df = pd.read_csv(results, encoding="utf-8")
-            processed_links = set(processed_df["link"].tolist())
-            print(f"이미 처리된 URL 개수: {len(processed_links)}")
+            processed = set(
+                processed_df[["keywords", "title", "link"]]
+                .apply(tuple, axis=1)
+                .tolist()
+            )
+            print(f"이미 처리된 URL 개수: {len(processed)}")
         else:
             processed_df = pd.DataFrame(
                 columns=df.columns.tolist()
@@ -259,7 +263,7 @@ class Youtube_Crawler:
                     "upload_date",
                 ]
             )
-            processed_links = set()
+            processed = set()
 
         _, user_agent = load_config(self.config)
         driver = start_driver(user_agent)
@@ -267,83 +271,104 @@ class Youtube_Crawler:
         c1 = datetime.now()
         print(f"{c1} 영상 설명 크롤링 시작!", end="\n")
 
-        for i in tqdm(range(len(df)), total=len(df), desc="크롤링 진행 중"):
-            row = df.iloc[i, :]
-            URL = row["link"]
+        error_log = []  # 에러 발생한 URL 수집
+        batch = self.save_batch  # 데이터 저장 주기
 
-            # 이미 처리된 URL 은 건너뛰기
-            if URL in processed_links:
-                continue
-
-            try:
-                driver.get(URL)
-                time.sleep(2)
-
-                html = driver.page_source
-                soup = BeautifulSoup(html, "html.parser")
-
-                script = soup.select_one("body > script").get_text()
-                channel_owner_id_re = (
-                    r'"ownerProfileUrl":"http://www.youtube.com/@(.*?)"'
+        try:
+            for i in tqdm(range(len(df)), total=len(df), desc="크롤링 진행 중"):
+                row = df.iloc[i, :]
+                check = (
+                    row["keywords"],
+                    row["title"],
+                    row["link"],
                 )
-                description_re = r'description":{"simpleText":"(.*?)"},'
-                length_re = r'},"lengthSeconds":"(.*?)","ownerProfileUrl"'
-                view_re = r'"viewCount":"(.*?)",'
-                upload_date_re = r'"publishDate":"(.*?)","ownerChannelName'
+                URL = row["link"]
 
-                channel_owner_id = re.search(
-                    channel_owner_id_re, script
-                )  # 채널 제작자 id
-                description = re.search(description_re, script)  # 영상 세부 설명
-                length = re.search(length_re, script)  # 영상 길이
-                view = re.search(view_re, script)  # 조회수
-                upload_date = re.search(upload_date_re, script)  # 업로드 날짜
+                # 이미 처리된 데이터는 건너뛰기
+                if check in processed:
+                    continue
 
-                channel_owner_id = (
-                    channel_owner_id.group(1) if channel_owner_id else "-"
-                )
-                description = description.group(1) if description else "-"
-                length = length.group(1) if length else "-"
-                view = view.group(1) if view else "-"
-                upload_date = upload_date.group(1) if upload_date else "-"
+                try:
+                    driver.get(URL)
+                    time.sleep(2)
 
-            except Exception as e:
-                print(f"URL {URL} 에서 에러 발생: {e}")
-                channel_owner_id, description, length, view, upload_date = (
-                    "-",
-                    "-",
-                    "-",
-                    "-",
-                    "-",
-                )
+                    html = driver.page_source
+                    soup = BeautifulSoup(html, "html.parser")
 
-            # 새 데이터를 처리된 데이터프레임에 추가
-            new_row = pd.DataFrame(
-                [
+                    script_tag = soup.select_one("body > script")
+                    script = script_tag.get_text() if script_tag else ""
+
+                    channel_owner_id_re = (
+                        r'"ownerProfileUrl":"http://www.youtube.com/@(.*?)"'
+                    )
+                    description_re = r'description":{"simpleText":"(.*?)"},'
+                    length_re = r'},"lengthSeconds":"(.*?)","ownerProfileUrl"'
+                    view_re = r'"viewCount":"(.*?)",'
+                    upload_date_re = r'"publishDate":"(.*?)","ownerChannelName'
+
+                    channel_owner_id = re.search(
+                        channel_owner_id_re, script
+                    )  # 채널 제작자 id
+                    description = re.search(description_re, script)  # 영상 세부 설명
+                    length = re.search(length_re, script)  # 영상 길이
+                    view = re.search(view_re, script)  # 조회수
+                    upload_date = re.search(upload_date_re, script)  # 업로드 날짜
+
+                    channel_owner_id = (
+                        channel_owner_id.group(1) if channel_owner_id else "-"
+                    )
+                    description = description.group(1) if description else "-"
+                    length = length.group(1) if length else "-"
+                    view = view.group(1) if view else "-"
+                    upload_date = upload_date.group(1) if upload_date else "-"
+
+                except Exception as e:
+                    print(f"URL {URL} 에서 에러 발생: {e}")
+                    error_log.append((URL, e))
+                    channel_owner_id, description, length, view, upload_date = (
+                        "-",
+                        "-",
+                        "-",
+                        "-",
+                        "-",
+                    )
+
+                # 새 데이터를 처리된 데이터프레임에 추가
+                new_row = pd.DataFrame(
                     [
-                        row["keywords"],
-                        row["title"],
-                        row["channel_owner"],
-                        row["link"],
-                        row["is_shorts"],
-                        row["thumbnail"],
-                        channel_owner_id,
-                        description,
-                        length,
-                        view,
-                        upload_date,
-                    ]
-                ],
-                columns=processed_df.columns,
-            )
+                        [
+                            row["keywords"],
+                            row["title"],
+                            row["channel_owner"],
+                            row["link"],
+                            row["is_shorts"],
+                            row["thumbnail"],
+                            channel_owner_id,
+                            description,
+                            length,
+                            view,
+                            upload_date,
+                        ]
+                    ],
+                    columns=processed_df.columns,
+                )
 
-            processed_df = pd.concat([processed_df, new_row], ignore_index=True)
-            processed_df.to_csv(results, index=False, encoding="utf-8")
-            processed_links.add(URL)
+                processed_df = pd.concat([processed_df, new_row], ignore_index=True)
+                processed.add(check)
 
-            time.sleep(random.uniform(1, 3))
+                if i % batch == 0:
+                    processed_df.to_csv(results, index=False, encoding="utf-8")
 
-        driver.quit()
+                time.sleep(random.uniform(1, 3))
+
+        finally:
+            driver.quit()
+
+        # 에러 로그 저장
+        if error_log:
+            with open(f"./error_urls_{c1}.txt", "w") as f:
+                for url, error in error_log:
+                    f.write(f"{url} -> {error} \n")
 
         c2 = datetime.now()
         print(f"{c2} 영상 설명 크롤링 끝!", end="\n")
