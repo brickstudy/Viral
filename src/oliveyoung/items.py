@@ -11,9 +11,10 @@ class Items:
     """
     brand_name으로 들어온 브랜드의 올리브영 웹 페이지 상 아이템, 리뷰 수집
     """
-    def __init__(self, brand_name: str, brand_url: str):
+    def __init__(self, brand_name: str, brand_url: str, logger):
         self.brand = brand_name
         self.brand_url = brand_url
+        self.logger = logger
         self.data = defaultdict(oliveyoung_item_generator)
         self.item_id = None
         self.driver = webdriver.Chrome()
@@ -43,6 +44,10 @@ class Items:
         # 페이지 넘기면서 상품 정보 수집
         next_pages = self.driver.find_elements(By.CSS_SELECTOR, '.pageing a[data-page-no]')
         if next_pages:
+            self.logger.info(
+                "%s pages",
+                len(next_pages)
+            )
             for next_page in next_pages:
                 try:
                     self.driver.execute_script("arguments[0].click();", next_page)
@@ -80,7 +85,10 @@ class Items:
             self.driver.execute_script("arguments[0].click();", review_button_element)
             time.sleep(random.randint(1, 3))
         except Exception as e:
-            print(f"리뷰 버튼 클릭 실패: {e}")
+            self.logger.error(
+                "error while clicking review button. here's why: %s",
+                e
+            )
 
     def __click_latest_button(self) -> None:
         try:
@@ -89,7 +97,10 @@ class Items:
             self.driver.execute_script("arguments[0].click();", latest_button_element)
             time.sleep(random.randint(1, 3))
         except Exception as e:
-            print(f"최신순 버튼 클릭 실패: {e}")
+            self.logger.error(
+                "error while clicking latest button. here's why: %s",
+                e
+            )
 
     def __get_reviews_with_page_moving(self):
         self.___get_reviews_in_each_page()
@@ -102,7 +113,9 @@ class Items:
                     self.driver.execute_script("arguments[0].click();", next_pages[i])
                     time.sleep(random.randrange(3, 5) + random.random())
                 except Exception:
-                    print("exception block in page moving")
+                    self.logger.error(
+                        "error while clicking review page button"
+                    )
                     time.sleep(3)
                 self.___get_reviews_in_each_page()
                 next_pages = self.driver.find_elements(By.CSS_SELECTOR, '.pageing a[data-page-no]')

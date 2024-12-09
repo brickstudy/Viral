@@ -17,8 +17,8 @@ def oliveyoung_brand_scrapping():
 
 
 def oliveyoung_items_reviews_crawling():
-    brand_name_lst = ["롬엔", "컬러그램", "페리페라", "토니모리", "바닐라코"]
-    brand_code_lst = ["A001833", "A002712", "A000511", "A003693", "A002759"]
+    brand_name_lst = ["컬러그램", "페리페라", "토니모리", "바닐라코"]
+    brand_code_lst = ["A002712", "A000511", "A003693", "A002759"]
 
     for brand_name, brand_code in zip(brand_name_lst, brand_code_lst):
         logger.info(
@@ -27,7 +27,7 @@ def oliveyoung_items_reviews_crawling():
         )
         brand_url = f"https://www.oliveyoung.co.kr/store/display/getBrandShopDetail.do?onlBrndCd={brand_code}"
 
-        item_x = Items(brand_name, brand_url)
+        item_x = Items(brand_name, brand_url, logger)
         item_x.crawl_total_items()
         logger.info(
             "getting %s's items is done\n%s",
