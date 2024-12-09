@@ -107,6 +107,25 @@ def start_driver(user_agent, timeout=15):
             options.add_argument("user-agent=" + user_agent)
             options.add_argument("headless")
             options.add_argument("--mute-audio")
+            options.add_argument("--disable-gpu")
+            options.add_argument("--no_sandbox")
+            options.add_argument(
+                "--disable-extensions"
+            )  # Chrome 확장 프로그램 비활성화
+            options.add_argument(
+                "--disable-dev-shm-usage"
+            )  # Chrome 이 /dev/shm(공유 메모리) 사용 비활성화
+            options.add_argument(
+                "--disable-blink-features=AutomationControlled"
+            )  # 웹 사이트에서 브라우저가 자동화 도구를 통해 제어되고 있음을 감지하지 못하도록
+            options.add_argument("--incognito")  # 시크릿 모드
+            options.add_argument(
+                "--disable-infobars"
+            )  # "Chrome이 자동화된 테스트 소프트웨어에 의해 제어되고 있습니다"라는 메시지 숨기기
+
+            # options.add_argument("--proxy-server=http://proxy.example.com:8080") proxy 사용 예제
+            # options.add_argument("--remote-debugging-port=0000") 원격 디버깅 포트 설정 예제
+
             driver = webdriver.Chrome(service=service, options=options)
 
         except WebDriverException as e:
