@@ -88,3 +88,13 @@ def get_user_agent_lst() -> str:
     with open(brand_data_json_path, 'r', encoding='utf-8') as file:
         loaded_data = json.load(file)
     return loaded_data['headers']['user-agent']
+
+
+def get_brand_url(brand_name: str) -> str:
+    """
+    브랜드명의 올리브영 브랜드관 url 링크 스트링 리턴
+    """
+    json_path = os.path.join(get_workdir(), 'src/oliveyoung/oliveyoung_brand_url.json')
+    with open(json_path, 'r', encoding='utf-8') as file:
+        loaded_data = json.load(file)
+    return loaded_data[brand_name]
