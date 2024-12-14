@@ -11,13 +11,16 @@ class Items:
     """
     brand_name으로 들어온 브랜드의 올리브영 웹 페이지 상 아이템, 리뷰 수집
     """
-    def __init__(self, brand_name: str, brand_url: str, logger):
+    def __init__(self, brand_name: str, brand_url: str, logger, driver=None):
         self.brand = brand_name
         self.brand_url = brand_url
         self.logger = logger
         self.data = defaultdict(oliveyoung_item_generator)
         self.item_id = None
-        self.driver = webdriver.Chrome()
+        if driver:
+            self.driver = driver
+        else:
+            self.driver = webdriver.Chrome()
 
     def crawl_total_items(self):
         """

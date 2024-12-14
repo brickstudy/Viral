@@ -45,5 +45,24 @@ def handler(event=None, context=None):
             "driver is not created successfully. Here's the exception %s",
             e
         )
+        
+    # handler 함수 event argument 파싱 - platform, details
+    platform = event.get("platform", "").lower()
+    if platform not in ["youtube", "oliveyoung"]:
+        logger.error(
+            "Invalid platform. Supported: 'youtube', 'oliveyoung'"
+        )
+        return {"error": "Invalid platform. Supported: 'youtube', 'oliveyoung'"}
+
+    details = event.get("details", {})
+
+    # 올리브영 또는 유튜브 수집기 동작
+    if platform == 'oliveyoung':
+        if details.get("target") == "brand":
+            main_brand(driver, **details)
+        else:
+            main_item(driver, **details)
+    # else:
+    #     main(driver, **details)
 
     return
