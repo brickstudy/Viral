@@ -1,43 +1,48 @@
 from selenium import webdriver
 from tempfile import mkdtemp
 
-from utils.logger import Logging
+from src.utils.logger import Logging
+from src.oliveyoung.main import main_brand
+from src.oliveyoung.main import main_item
+# from src.youtube.main import main
 
 
 logger = Logging("Handler").get_logger()
 
 
-def handler(event=None, context=None, chrome=None, user_agent=None):
+def handler(event=None, context=None):
 
-    def driver_getter(chrome=None, user_agent="Mozilla/5.0"):
-        if chrome is None:
-            options = webdriver.ChromeOptions()
-            service = webdriver.ChromeService("/opt/chromedriver")
+    def driver_getter(user_agent="Mozilla/5.0"):
+        options = webdriver.ChromeOptions()
+        service = webdriver.ChromeService("/opt/chromedriver")
 
-            options.binary_location = '/opt/chrome/chrome'
-            options.add_argument("--headless=new")
-            options.add_argument('--no-sandbox')
-            options.add_argument("--disable-gpu")
-            options.add_argument("--window-size=1280x1696")
-            options.add_argument("--single-process")
-            options.add_argument("--disable-dev-shm-usage")
-            options.add_argument("--disable-dev-tools")
-            options.add_argument("--no-zygote")
-            options.add_argument(f"--user-data-dir={mkdtemp()}")
-            options.add_argument(f"--data-path={mkdtemp()}")
-            options.add_argument(f"--disk-cache-dir={mkdtemp()}")
-            options.add_argument("--remote-debugging-port=9222")
-            options.add_argument(f"--user-agent={user_agent}")
+        options.binary_location = '/opt/chrome/chrome'
+        options.add_argument("--headless=new")
+        options.add_argument('--no-sandbox')
+        options.add_argument("--disable-gpu")
+        options.add_argument("--window-size=1280x1696")
+        options.add_argument("--single-process")
+        options.add_argument("--disable-dev-shm-usage")
+        options.add_argument("--disable-dev-tools")
+        options.add_argument("--no-zygote")
+        options.add_argument(f"--user-data-dir={mkdtemp()}")
+        options.add_argument(f"--data-path={mkdtemp()}")
+        options.add_argument(f"--disk-cache-dir={mkdtemp()}")
+        options.add_argument("--remote-debugging-port=9222")
+        options.add_argument(f"--user-agent={user_agent}")
 
-            return webdriver.Chrome(options=options, service=service)
-        return chrome
+        return webdriver.Chrome(options=options, service=service)
 
-    chrome = driver_getter(user_agent=user_agent)
+    # handler 함수 event argument 파싱 - user_agent
+    user_agent = event.get("user_agent", "")
+
+    # selenium webdriver 생성
+    driver = driver_getter(user_agent=user_agent)
     try:
-        assert chrome
+        assert driver
     except Exception as e:
         logger.error(
-            "chrome is not created successfully. Here's the exception %s",
+            "driver is not created successfully. Here's the exception %s",
             e
         )
 
