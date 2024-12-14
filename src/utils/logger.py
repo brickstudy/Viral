@@ -25,6 +25,7 @@ class Logging:
     )
     """
     def __init__(self, name: str) -> None:
+        self.logger_name = name
         self.logger = logging.getLogger(name)
         self.logFormatter = logging.Formatter(
             "%(asctime)s [%(levelname)-5.5s] [%(name)s] %(message)s"
@@ -51,7 +52,7 @@ class Logging:
         """
         로그 파일 출력 핸들러 추가
         """
-        logPath = f"{get_workdir()}/logs"
+        logPath = f"{get_workdir()}/logs/{self.logger_name}"
         fileName = datetime.datetime.today().strftime('%Y-%m-%d-%H%M')
         self._make_dir_(logPath)
         handler = logging.FileHandler("{0}/{1}.log".format(logPath, fileName))

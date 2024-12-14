@@ -52,7 +52,7 @@ def write_local_as_json(data: dict, file_path: str, file_name: str) -> None:
 
 
 def read_local_as_dict(file_path: str, file_name: str) -> dict:
-    from src.scrapper.models import OliveyoungBrand
+    from src.oliveyoung.models import OliveyoungBrand
 
     path = f"{file_path}/{file_name}.json"
     with open(path, 'r', encoding='utf-8') as json_file:
@@ -63,7 +63,7 @@ def read_local_as_dict(file_path: str, file_name: str) -> dict:
     return loaded_data
 
 
-def current_datetime_getter():
+def current_datetime_getter():  
     current_time = datetime.now()
     current_datetime = current_time.strftime("%Y%m%d_%H%M%S")
     return current_datetime
@@ -74,3 +74,27 @@ def get_workdir():
     실행시스템경로/Viral 경로 리턴
     """
     return os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+
+def get_total_brand_lst() -> list:
+    brand_data_json_path = os.path.join(get_workdir(), 'config.json')
+    with open(brand_data_json_path, 'r', encoding='utf-8') as file:
+        loaded_data = json.load(file)
+    return loaded_data['keywords']
+
+
+def get_user_agent_lst() -> str:
+    brand_data_json_path = os.path.join(get_workdir(), 'config.json')
+    with open(brand_data_json_path, 'r', encoding='utf-8') as file:
+        loaded_data = json.load(file)
+    return loaded_data['headers']['user-agent']
+
+
+def get_brand_url(brand_name: str) -> str:
+    """
+    브랜드명의 올리브영 브랜드관 url 링크 스트링 리턴
+    """
+    json_path = os.path.join(get_workdir(), 'src/oliveyoung/oliveyoung_brand_url.json')
+    with open(json_path, 'r', encoding='utf-8') as file:
+        loaded_data = json.load(file)
+    return loaded_data[brand_name]

@@ -2,6 +2,7 @@ from src.oliveyoung.brand import Brand
 from src.oliveyoung.items import Items
 from src.utils.utils import write_local_as_json, current_datetime_getter
 from src.utils.logger import Logging
+from src.utils.utils import get_brand_url
 
 import time
 import random
@@ -16,46 +17,54 @@ def oliveyoung_brand_scrapping():
     write_local_as_json(brand.brand_metadata, './logs', f"brand_{str(current_datetime_getter())}")
 
 
-def oliveyoung_items_reviews_crawling():
-    brand_name_lst = ["롬엔", "컬러그램", "페리페라", "토니모리", "바닐라코"]
-    brand_code_lst = ["A001833", "A002712", "A000511", "A003693", "A002759"]
+def oliveyoung_items_reviews_crawling(driver, brand_name, brand_url):
+    """
+    :brand_name: 브랜드 이름 eg. "컬러그램", "페리페라"
+    :brand_code: 올리브영 상에 매핑되어있는 브랜드 코드 eg. "A002712", "A000511"
+    """
+    logger.info(
+        "start to get item scrapping of %s",
+        brand_name
+    )
+    item_x = Items(brand_name, brand_url, logger, driver)
+    item_x.crawl_total_items()
+    logger.info(
+        "getting %s's items is done\n%s",
+        brand_name,
+        item_x.data.keys()
+    )
 
-    for brand_name, brand_code in zip(brand_name_lst, brand_code_lst):
-        logger.info(
-            "start to get item scrapping of %s",
-            brand_name
-        )
-        brand_url = f"https://www.oliveyoung.co.kr/store/display/getBrandShopDetail.do?onlBrndCd={brand_code}"
+    item_list = item_x.data.keys()
+    for item in item_list:
+        try:
+            item_x.crawl_reviews_in_each_items(item_id=item)
+        except Exception:
+            logger.error(
+                "fail during getting %s",
+                item
+            )
+            time.sleep(random.randrange(5, 7) + random.random())
+            continue
 
-        item_x = Items(brand_name, brand_url)
-        item_x.crawl_total_items()
-        logger.info(
-            "getting %s's items is done\n%s",
-            brand_name,
-            item_x.data.keys()
-        )
+    logger.info(
+        "write %s as file",
+        brand_name
+    )
+    write_local_as_json(item_x.data, './logs', f"{brand_name}_items")
 
-        item_list = item_x.data.keys()
-        for item in item_list:
-            try:
-                item_x.crawl_reviews_in_each_items(item_id=item)
-            except Exception:
-                logger.error(
-                    "fail during getting %s",
-                    item
-                )
-                time.sleep(random.randrange(5, 7) + random.random())
-                continue
 
-        logger.info(
-            "write %s as file",
-            brand_name
-        )
-        write_local_as_json(item_x.data, './logs', f"{brand_name}_items")
+# TODO
+def main_brand(driver, **kwargs):
+    pass
+
+
+def main_item(driver, **kwargs):
+    # 최초 entrypoint arg로 받은 수집 대상 브랜드 리스트
+    brand = kwargs.get("brand")
+    brand_url = get_brand_url(brand)
+    oliveyoung_items_reviews_crawling(driver, brand, brand_url)
 
 
 if __name__ == '__main__':
-    # 브랜드 정보 수집
     # oliveyoung_brand_scrapping()
-    # 아이템 정보, 해당 아이템의 리뷰 수집
     oliveyoung_items_reviews_crawling()
