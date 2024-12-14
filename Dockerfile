@@ -18,5 +18,4 @@ RUN pip install selenium==4.16.0 \
 COPY --from=build /opt/chrome-linux64 /opt/chrome
 COPY --from=build /opt/chromedriver-linux64 /opt/
 COPY src ${LAMBDA_TASK_ROOT}/src
-COPY src/handler.py ${LAMBDA_TASK_ROOT}/handler.py
-CMD ["handler.handler"]
+CMD ["src.handler.handler"]
