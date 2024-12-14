@@ -52,7 +52,7 @@ def write_local_as_json(data: dict, file_path: str, file_name: str) -> None:
 
 
 def read_local_as_dict(file_path: str, file_name: str) -> dict:
-    from src.scrapper.models import OliveyoungBrand
+    from src.oliveyoung.models import OliveyoungBrand
 
     path = f"{file_path}/{file_name}.json"
     with open(path, 'r', encoding='utf-8') as json_file:
@@ -76,14 +76,14 @@ def get_workdir():
     return os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
-def get_total_brand_lst():
+def get_total_brand_lst() -> list:
     brand_data_json_path = os.path.join(get_workdir(), 'config.json')
     with open(brand_data_json_path, 'r', encoding='utf-8') as file:
         loaded_data = json.load(file)
     return loaded_data['keywords']
 
 
-def get_user_agent_lst():
+def get_user_agent_lst() -> str:
     brand_data_json_path = os.path.join(get_workdir(), 'config.json')
     with open(brand_data_json_path, 'r', encoding='utf-8') as file:
         loaded_data = json.load(file)
