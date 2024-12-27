@@ -1,7 +1,8 @@
 from selenium.webdriver.common.by import By
 from bs4 import BeautifulSoup
 
-from utils import load_config, scroll, start_driver
+from utils import ConfigLoader, scroll, start_driver
+from text_classification import initialize_model, classify_text
 
 import pandas as pd
 import time
@@ -13,7 +14,10 @@ import glob
 import shutil
 from tqdm import tqdm
 
+'''
+config = ConfigLoader("config.json")
 
+'''
 class Youtube_Crawler:
     def __init__(self, args):
         self.config = args.config  # config.json 주소
@@ -27,7 +31,13 @@ class Youtube_Crawler:
         """
         검색 및 필터링 후 키워드, 영상제목, 영상 제작자, 링크, 쇼츠여부, 섬네일 이미지 수집
         """
-        keywords, user_agent = load_config(self.config)
+        
+        config = ConfigLoader(self.config)
+        config.load()
+        keywords = config.get("keywords")
+        user_agent = config.get("headers")['user-agent']
+        
+        # keywords, user_agent = load_config(self.config)
         driver = start_driver(user_agent)
 
         current_time = datetime.now()
@@ -53,7 +63,7 @@ class Youtube_Crawler:
 
         # 크롤링 개수 제한. 아래는 500개 예시
         # keywords = keywords[:500]
-        keywords = keywords[311:622]
+        # keywords = keywords[311:622]
 
         for keyword in tqdm(keywords, total=len(keywords), desc="크롤링 진행 중"):
             SEARCH_KEYWORD = keyword.replace(" ", "+")
@@ -74,7 +84,7 @@ class Youtube_Crawler:
                 time.sleep(1.5)
 
             else:
-                URL = "https://www.youtube.com/results?search_query=" + SEARCH_KEYWORD
+                URL = "https://www.youtube.com/results?search_query=" + SEARCH_KEYWORD 
                 print("URL : " + URL)
                 driver.get(URL)
                 time.sleep(1.5)
@@ -217,7 +227,7 @@ class Youtube_Crawler:
         """
         영상 설명란 정보, 채널 id, 비디오 길이, 조회 수, 영상 업로드 날짜 얻어오기. 정보를 얻어오면 그 즉시 저장하고 업데이트
         """
-
+        chat_session = initialize_model()
         folder_path = os.path.join(self.data_path, "pre")
         file_pattern = os.path.join(folder_path, "youtube_*.csv")
         files = glob.glob(file_pattern)
@@ -262,11 +272,18 @@ class Youtube_Crawler:
                     "video_length",
                     "view_count",
                     "upload_date",
+                    "label"
                 ]
             )
             processed = set()
 
-        _, user_agent = load_config(self.config)
+        
+        config = ConfigLoader(self.config)
+        config.load()
+        user_agent = config.get("headers")['user-agent']
+        
+        # _, user_agent = load_config(self.config)
+        
         driver = start_driver(user_agent)
 
         c1 = datetime.now()
@@ -322,7 +339,7 @@ class Youtube_Crawler:
                     length = length.group(1) if length else "-"
                     view = view.group(1) if view else "-"
                     upload_date = upload_date.group(1) if upload_date else "-"
-
+                    label = classify_text(chat_session, row["title"] + description)
                 except Exception as e:
                     print(f"URL {URL} 에서 에러 발생: {e}")
                     error_log.append((URL, e))
@@ -349,6 +366,7 @@ class Youtube_Crawler:
                             length,
                             view,
                             upload_date,
+                            label,
                         ]
                     ],
                     columns=processed_df.columns,
@@ -361,7 +379,6 @@ class Youtube_Crawler:
                     processed_df.to_csv(results, index=False, encoding="utf-8")
 
                 # time.sleep(random.uniform(1, 3))
-
         finally:
             driver.quit()
 
@@ -402,6 +419,7 @@ class Youtube_Crawler:
                     "video_length",
                     "view_count",
                     "upload_date",
+                    "label"
                 ]
             )
             default_df.to_csv(data, index=False, encoding="utf-8")
