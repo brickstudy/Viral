@@ -52,7 +52,8 @@ class Youtube_Crawler:
         print(f"{c1} 검색 크롤링 시작", end="\n")
 
         # 크롤링 개수 제한. 아래는 500개 예시
-        keywords = keywords[:500]
+        # keywords = keywords[:500]
+        keywords = keywords[311:622]
 
         for keyword in tqdm(keywords, total=len(keywords), desc="크롤링 진행 중"):
             SEARCH_KEYWORD = keyword.replace(" ", "+")
@@ -290,7 +291,7 @@ class Youtube_Crawler:
 
                 try:
                     driver.get(URL)
-                    time.sleep(2)
+                    # time.sleep(2)
 
                     html = driver.page_source
                     soup = BeautifulSoup(html, "html.parser")
@@ -359,7 +360,7 @@ class Youtube_Crawler:
                 if i % batch == 0:
                     processed_df.to_csv(results, index=False, encoding="utf-8")
 
-                time.sleep(random.uniform(1, 3))
+                # time.sleep(random.uniform(1, 3))
 
         finally:
             driver.quit()
