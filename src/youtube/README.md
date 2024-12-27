@@ -20,6 +20,8 @@ python main.py --config [config.json 경로] --period [week or month] --step [1,
 ├── __init__.py
 ├── config.json  # brand keyword(933), user-agent
 ├── main.py
+├── preprocess.py
+├── text_classification.py
 ├── utils.py
 └── youtube_crawler.py
 ```
