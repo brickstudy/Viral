@@ -7,7 +7,39 @@ from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.chrome.service import Service
 import threading
 
+class ConfigLoader:
+    """
+        keywords와 user-agent, api 가져오기
 
+        Args:
+            path (str): config 파일 경로
+
+        Returns:
+            keywords: crawling 검색 키워드
+            user_agent: ip 차단 방지용 user-agent
+            gemini_key: 구글 제미나이의 api key
+            
+    """
+    def __init__(self, file_path):
+        self.file_path = file_path
+        self.config_data = None
+
+    def load(self):
+        
+        try:
+            with open(self.file_path, 'r', encoding='utf-8') as file:
+                self.config_data = json.load(file)
+        except FileNotFoundError as e:
+            raise FileNotFoundError(f"Config file not found: {self.file_path}") from e
+        except json.JSONDecodeError as e:
+            raise ValueError(f"Invalid JSON format in {self.file_path}") from e
+
+    def get(self, key, default=None):
+        if self.config_data is None:
+            raise ValueError("Configuration data is not loaded. Call 'load()' first.")
+        return self.config_data.get(key, default)
+    
+'''
 def load_config(path):
     """
     keywords 와 user-agent 가져오기
@@ -25,9 +57,9 @@ def load_config(path):
 
     keywords = config["keywords"]
     user_agent = config["headers"]["user-agent"]
-
+    
     return keywords, user_agent
-
+'''
 
 def scroll(driver):
     """
